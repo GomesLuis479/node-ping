@@ -94,16 +94,16 @@ const getNowTime = () => {
 };
 
 const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
+  const timeString = getNowTime();
+
   if (isError) {
     message = getChalkFormattedBasedOnPing(
-      `💀 ------ X X X X X X X ------ 💀`,
+      `${timeString} | ----- PACKET LOSS ------`,
       1000
     );
     clearJitterBuf();
   } else {
     const jitter = addAndGetJitter(timeInMilliseconds);
-
-    const timeString = getNowTime();
 
     const jitterString =
       jitter < 0 ? "-CALC-" : `${getWithZeroThousand(jitter)}ms`;
