@@ -123,8 +123,9 @@ const HOST = "8.8.8.8";
 
 const run = async () => {
   try {
-    const { time } = await ping.promise.probe(HOST);
-
+    const { time } = await ping.promise.probe(HOST, {
+      timeout: 4
+    });
     if (isNaN(time)) {
       logPingMessage({ isError: true });
       return;
