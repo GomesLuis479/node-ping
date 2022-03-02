@@ -6,6 +6,13 @@ const COLORS = {
   BAD: "#c90d00",
   MODERATE: "#bdab3a",
   GOOD: "#37bd66",
+  STAT: "#0b03fc",
+};
+
+const SHARED_DATA = {
+  last_packet_loss_time: "None",
+  pingCount: 0,
+  packet_loss_count: 0,
 };
 
 const getChalkFormattedBasedOnPing = (message, ping) => {
@@ -20,6 +27,10 @@ const getChalkFormattedBasedOnPing = (message, ping) => {
     color = COLORS.GOOD;
   }
 
+  return chalk.hex(color)(message);
+};
+
+const getChalkFormatted = (message, color) => {
   return chalk.hex(color)(message);
 };
 
@@ -96,12 +107,16 @@ const getNowTime = () => {
 const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
   const timeString = getNowTime();
 
+  SHARED_DATA.pingCount += 1;
+
   if (isError) {
     message = getChalkFormattedBasedOnPing(
       `${timeString} | ----- PACKET LOSS ------`,
       1000
     );
     clearJitterBuf();
+    SHARED_DATA.last_packet_loss_time = timeString;
+    SHARED_DATA.packet_loss_count += 1;
   } else {
     const jitter = addAndGetJitter(timeInMilliseconds);
 
@@ -117,6 +132,14 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
   }
 
   console.log(message);
+
+  if (SHARED_DATA.pingCount % 30 === 0) {
+    infoMessage = getChalkFormatted(
+      `[PL] last = ${SHARED_DATA.last_packet_loss_time} count = ${SHARED_DATA.packet_loss_count}`,
+      COLORS.STAT
+    );
+    console.log(infoMessage);
+  }
 };
 
 const HOST = "8.8.8.8";
@@ -124,7 +147,7 @@ const HOST = "8.8.8.8";
 const run = async () => {
   try {
     const { time } = await ping.promise.probe(HOST, {
-      timeout: 4
+      timeout: 4,
     });
     if (isNaN(time)) {
       logPingMessage({ isError: true });
