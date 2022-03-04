@@ -162,4 +162,4 @@ const run = async () => {
 
 setInterval(() => {
   run();
-}, 1100);
+}, 500);
