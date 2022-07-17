@@ -4,7 +4,7 @@ const ping = require("ping");
 const CONFIG = {
   HOST: "8.8.8.8",
   INTERVAL_MS: 500,
-  PACKET_LOSS_WINDOW_SECONDS: 70
+  PACKET_LOSS_WINDOW_SECONDS: 300
 };
 
 const COLORS = {
