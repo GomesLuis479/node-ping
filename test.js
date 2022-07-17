@@ -1,9 +1,10 @@
 const chalk = require("chalk");
 const ping = require("ping");
 
-CONFIG = {
+const CONFIG = {
   HOST: "8.8.8.8",
-  INTERVAL_MS: 500
+  INTERVAL_MS: 500,
+  PACKET_LOSS_WINDOW_SECONDS: 70
 };
 
 const COLORS = {
@@ -11,13 +12,18 @@ const COLORS = {
   BAD: "#c90d00",
   MODERATE: "#bdab3a",
   GOOD: "#37bd66",
-  STAT: "#0b03fc",
+  STAT: "#f500f1",
 };
 
 const SHARED_DATA = {
   last_packet_loss_time: "None",
+
   pingCount: 0,
-  packet_loss_count: 0,
+  window_packet_loss_count: 0,
+  total_packet_loss_count: 0,
+
+
+  last_packet_loss_window_update_time: new Date()
 };
 
 const getChalkFormattedBasedOnPing = (message, ping) => {
@@ -121,7 +127,8 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
     );
     clearJitterBuf();
     SHARED_DATA.last_packet_loss_time = timeString;
-    SHARED_DATA.packet_loss_count += 1;
+    SHARED_DATA.window_packet_loss_count += 1;
+    SHARED_DATA.total_packet_loss_count += 1;
   } else {
     const jitter = addAndGetJitter(timeInMilliseconds);
 
@@ -136,11 +143,25 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
     );
   }
 
+  // reset packet loss window if needed
+  const now = new Date()
+  const diffFromNowOfLastPLWindowSecs = Math.abs(now - SHARED_DATA.last_packet_loss_window_update_time) / (1000)
+  if(diffFromNowOfLastPLWindowSecs > CONFIG.PACKET_LOSS_WINDOW_SECONDS) {
+    SHARED_DATA.last_packet_loss_time = "None";
+    SHARED_DATA.window_packet_loss_count = 0;
+    const resetInfoMessage = getChalkFormatted(
+      `[PL:${CONFIG.PACKET_LOSS_WINDOW_SECONDS}] RESET, Total = ${SHARED_DATA.total_packet_loss_count}`,
+      COLORS.STAT
+    );
+    SHARED_DATA.last_packet_loss_window_update_time = new Date()
+    console.log(resetInfoMessage);
+  }
+
   console.log(message);
 
   if (SHARED_DATA.pingCount % 30 === 0) {
     infoMessage = getChalkFormatted(
-      `[PL] last = ${SHARED_DATA.last_packet_loss_time} count = ${SHARED_DATA.packet_loss_count}`,
+      `[PL:${CONFIG.PACKET_LOSS_WINDOW_SECONDS}] last = ${SHARED_DATA.last_packet_loss_time} count = ${SHARED_DATA.window_packet_loss_count}`,
       COLORS.STAT
     );
     console.log(infoMessage);
