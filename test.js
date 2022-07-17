@@ -4,8 +4,18 @@ const ping = require("ping");
 const CONFIG = {
   HOST: "8.8.8.8",
   INTERVAL_MS: 500,
-  PACKET_LOSS_WINDOW_SECONDS: 300
+  PACKET_LOSS_WINDOW_SECONDS: 300,
+  PL_HISTORY_LENGTH: 10
 };
+
+const PL_HISTORY = []
+
+const addToPlHistory = (latestCount) => {
+  PL_HISTORY.unshift(latestCount)
+  if(PL_HISTORY.length > CONFIG.PL_HISTORY_LENGTH) {
+    PL_HISTORY.pop()
+  }
+}
 
 const COLORS = {
   SEVERE: "#ff1000",
@@ -147,6 +157,7 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
   const now = new Date()
   const diffFromNowOfLastPLWindowSecs = Math.abs(now - SHARED_DATA.last_packet_loss_window_update_time) / (1000)
   if(diffFromNowOfLastPLWindowSecs > CONFIG.PACKET_LOSS_WINDOW_SECONDS) {
+    addToPlHistory(SHARED_DATA.window_packet_loss_count)
     SHARED_DATA.last_packet_loss_time = "None";
     SHARED_DATA.window_packet_loss_count = 0;
     const resetInfoMessage = getChalkFormatted(
@@ -164,7 +175,13 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
       `[PL:${CONFIG.PACKET_LOSS_WINDOW_SECONDS}] last = ${SHARED_DATA.last_packet_loss_time} count = ${SHARED_DATA.window_packet_loss_count}`,
       COLORS.STAT
     );
+
+    const infoMessage2 = getChalkFormatted(
+      `[PL_HIST] ${PL_HISTORY.join(" ")}`,
+      COLORS.STAT
+    );
     console.log(infoMessage);
+    console.log(infoMessage2);
   }
 };
 
