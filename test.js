@@ -1,6 +1,11 @@
 const chalk = require("chalk");
 const ping = require("ping");
 
+CONFIG = {
+  HOST: "8.8.8.8",
+  INTERVAL_MS: 500
+};
+
 const COLORS = {
   SEVERE: "#ff1000",
   BAD: "#c90d00",
@@ -142,11 +147,9 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
   }
 };
 
-const HOST = "8.8.8.8";
-
 const run = async () => {
   try {
-    const { time } = await ping.promise.probe(HOST, {
+    const { time } = await ping.promise.probe(CONFIG.HOST, {
       timeout: 4,
     });
     if (isNaN(time)) {
@@ -162,4 +165,6 @@ const run = async () => {
 
 setInterval(() => {
   run();
-}, 500);
+}, CONFIG.INTERVAL_MS);
+
+console.log("PING HOST:", CONFIG.HOST);
