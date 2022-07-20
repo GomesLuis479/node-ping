@@ -5,7 +5,7 @@ const CONFIG = {
   HOST: "8.8.8.8",
   INTERVAL_MS: 500,
   PACKET_LOSS_WINDOW_SECONDS: 300,
-  PL_HISTORY_LENGTH: 10
+  PL_HISTORY_LENGTH: 20
 };
 
 const PL_HISTORY = []
@@ -177,7 +177,7 @@ const logPingMessage = ({ isError = false, timeInMilliseconds = 1000 }) => {
     );
 
     const infoMessage2 = getChalkFormatted(
-      `[PL_HIST] ${PL_HISTORY.join(" ")}`,
+      `[PL_H]:${PL_HISTORY.join(",")}`,
       COLORS.STAT
     );
     console.log(infoMessage);
